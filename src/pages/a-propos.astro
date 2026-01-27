@@ -1,0 +1,549 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const pageTitle = 'Sur le Banc Vernon : média local d’actualité à Vernon';
+const pageDescription =
+  'Sur le Banc Vernon est un média local indépendant qui raconte l’actualité de Vernon à travers des vidéos et des histoires humaines positives. Découvrez notre ligne éditoriale et notre projet.';
+---
+
+<style>
+  .about-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .about-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px 22px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+  }
+
+  .about-card + .about-card {
+    margin-top: 0;
+  }
+
+  .about-intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.1fr);
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  .about-kpis {
+    background: rgba(233, 78, 27, 0.04);
+    border-radius: 14px;
+    padding: 14px 14px 12px 14px;
+    font-size: 14px;
+  }
+
+  .about-kpis-title {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin: 0 0 6px 0;
+    color: #294596;
+  }
+
+  .about-kpis ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  .about-kpis li {
+    margin-bottom: 4px;
+  }
+
+  .about-section-title {
+    font-size: 20px;
+    margin: 0 0 10px 0;
+  }
+
+  .about-lead {
+    font-size: 15px;
+    line-height: 1.7;
+    margin: 0 0 10px 0;
+  }
+
+  .about-highlight {
+    margin: 10px 0 12px 0;
+    padding-left: 10px;
+    border-left: 3px solid #E94E1B;
+    font-size: 15px;
+    line-height: 1.7;
+    font-weight: 500;
+  }
+
+  .about-text {
+    font-size: 15px;
+    line-height: 1.7;
+    margin: 0 0 8px 0;
+  }
+
+  .about-text:last-child {
+    margin-bottom: 0;
+  }
+
+  .about-two-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .about-pill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .about-pill {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: rgba(41, 69, 150, 0.08);
+    color: #294596;
+    white-space: nowrap;
+  }
+
+  .about-subtitle {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #294596;
+    margin: 0 0 4px 0;
+  }
+
+  .about-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .about-audience-card {
+    background: rgba(41, 69, 150, 0.03);
+    border-radius: 12px;
+    padding: 14px 14px 12px 14px;
+    font-size: 14px;
+  }
+
+  .about-audience-card h3 {
+    margin: 0 0 6px 0;
+    font-size: 15px;
+    color: #E94E1B;
+  }
+
+  .about-people-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  .about-person {
+    background: rgba(41, 69, 150, 0.03);
+    border-radius: 12px;
+    padding: 14px 14px 12px 14px;
+    font-size: 14px;
+  }
+
+  .about-person h3 {
+    margin: 0 0 6px 0;
+    font-size: 16px;
+    color: #E94E1B;
+  }
+
+  .about-contact-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    border-radius: 999px;
+    background: #E94E1B;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    margin-top: 8px;
+  }
+
+  .about-faq {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 14px;
+  }
+
+  .about-faq-item {
+    border-radius: 10px;
+    background: rgba(41, 69, 150, 0.03);
+    padding: 10px 12px;
+  }
+
+  .about-faq-question {
+    margin: 0 0 4px 0;
+    font-weight: 600;
+    color: #E94E1B;
+    font-size: 14px;
+  }
+
+  .about-faq-answer {
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 899px) {
+    .about-intro {
+      grid-template-columns: 1fr;
+    }
+
+    .about-two-columns {
+      grid-template-columns: 1fr;
+    }
+
+    .about-grid-2 {
+      grid-template-columns: 1fr;
+    }
+
+    .about-people-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+>
+  <div class="about-wrapper">
+    {/* INTRO + POINTS CLÉS */}
+    <section class="about-card about-intro">
+      <div>
+        <h1 class="about-section-title">
+          Sur le Banc Vernon : l’actualité de Vernon, racontée autrement
+        </h1>
+
+        <p class="about-lead">
+          Dans les grandes villes, les infos défilent sans s’arrêter. À Vernon, on mérite autre chose
+          qu’un simple bruit de fond.
+        </p>
+
+        <p class="about-highlight">
+          Sur le Banc Vernon, c’est un média local qui prend le temps de raconter la ville,
+          à travers des histoires humaines et positives.
+        </p>
+
+        <p class="about-text">
+          Sur le Banc, c’est notre manière de montrer ce qui fait battre Vernon au quotidien :
+          les initiatives, les commerces, les associations, les événements… et surtout les Vernonnais.
+        </p>
+
+        <p class="about-text">
+          Nous sommes nés ici, nous avons grandi ici. Le 10 avril 2025, nous lançons Sur le Banc
+          avec une idée simple : créer un média local positif, proche des gens, indépendant,
+          qui valorise Vernon et celles et ceux qui la font vivre.
+        </p>
+      </div>
+
+      <aside class="about-kpis">
+        <p class="about-kpis-title">En un coup d’œil</p>
+        <ul>
+          <li>Média local indépendant, né à Vernon</li>
+          <li>Une ligne : actualité positive & histoires humaines</li>
+          <li>Objectif : fierté locale, confiance, attachement</li>
+          <li>+2 500 abonnés, +500 000 vues, une cinquantaine de vidéos</li>
+          <li>Publications plusieurs fois par semaine (site + réseaux sociaux)</li>
+        </ul>
+      </aside>
+    </section>
+
+    {/* POURQUOI SUR LE BANC EXISTE */}
+    <section class="about-card">
+      <h2 class="about-section-title">Pourquoi Sur le Banc existe</h2>
+
+      <p class="about-text">
+        Les villes moyennes ne sont pas des “trous” sur une carte. Elles sont faites de visages,
+        d’habitudes, d’élans, de travail, de courage discret et de petites victoires.
+      </p>
+
+      <p class="about-text">
+        Vernon n’est pas une “ville-dortoir” entre deux destinations.
+        C’est une ville qui vit, qui se transforme, qui se raconte.
+      </p>
+
+      <p class="about-highlight">
+        Sur le Banc, c’est une caméra et une voix, oui. Mais c’est surtout une intention :
+        rendre visible ce qui compte vraiment pour celles et ceux qui vivent ici.
+      </p>
+
+      <p class="about-text">
+        Nous ne cherchons pas à “faire du buzz” sur Vernon. Nous cherchons à faire du lien.
+        À créer un média du quotidien, accessible, qui donne envie de dire :
+        « Je vis ici, et j’en suis fier. »
+      </p>
+    </section>
+
+    {/* LIGNE ÉDITORIALE + DIFFERENCE */}
+    <section class="about-card">
+      <h2 class="about-section-title">Notre façon de raconter : positif, proche, authentique</h2>
+
+      <div class="about-two-columns">
+        <div>
+          <p class="about-text">
+            Sur le Banc Vernon, c’est :
+          </p>
+          <ul class="about-text">
+            <li>
+              de l’actualité positive, parce qu’il se passe énormément de choses à Vernon
+              et qu’on a besoin d’un regard juste et constructif ;
+            </li>
+            <li>
+              des histoires, parce que derrière chaque projet, chaque commerce,
+              chaque association, il y a des personnes et des parcours ;
+            </li>
+            <li>
+              de la proximité, parce qu’on ne parle pas “sur” la ville :
+              on parle avec les gens qui la vivent.
+            </li>
+          </ul>
+
+          <p class="about-text" style="margin-top: 10px;">
+            Notre différence tient à trois choix simples :
+          </p>
+          <ul class="about-text">
+            <li>Valoriser ce qui fait avancer Vernon ;</li>
+            <li>Raconter plutôt que survoler ;</li>
+            <li>Être proches : sur le terrain, dans les échanges, dans le ton.</li>
+          </ul>
+        </div>
+
+        <div>
+          <p class="about-subtitle">En résumé</p>
+          <div class="about-pill-list">
+            <span class="about-pill">Actualité positive</span>
+            <span class="about-pill">Histoires humaines</span>
+            <span class="about-pill">Ancrage 100% Vernon</span>
+            <span class="about-pill">Formats vidéo</span>
+            <span class="about-pill">Tonalité bienveillante</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* PAS JOURNALISTES + FORMATS */}
+    <section class="about-card">
+      <h2 class="about-section-title">Nous ne sommes pas journalistes — et c’est assumé</h2>
+
+      <p class="about-text">
+        Sur le Banc Vernon n’est pas une rédaction de presse, et nous ne revendiquons pas
+        un rôle journalistique.
+      </p>
+
+      <p class="about-text">
+        Nous sommes un média local, au sens simple du terme :
+        un outil pour transmettre, raconter, relier.
+      </p>
+
+      <p class="about-text">
+        Notre boussole, ce n’est pas la polémique. C’est la ville. Et ce qu’elle devient,
+        grâce à celles et ceux qui s’y engagent.
+      </p>
+
+      <hr style="margin: 16px 0; border: 0; border-top: 1px solid #e5e7eb;" />
+
+      <h3 class="about-section-title" style="font-size: 17px; margin-top: 0;">
+        Nos formats, en pratique
+      </h3>
+
+      <p class="about-text">
+        Une ville ne se raconte pas toujours de la même manière. C’est pour cela que nous utilisons
+        plusieurs formats :
+      </p>
+
+      <ul class="about-text">
+        <li>des formats courts, immersifs, tournés “sur le moment” ;</li>
+        <li>des formats plus narratifs, plus posés, pour installer une ambiance et une voix ;</li>
+        <li>des épisodes qui mettent en valeur la ville, sans la caricaturer.</li>
+      </ul>
+
+      <p class="about-text">
+        Nous publions plusieurs fois par semaine sur le site, Facebook, Instagram, TikTok et YouTube.
+      </p>
+    </section>
+
+    {/* CE QUE VOUS TROUVEREZ */}
+    <section class="about-card">
+      <h2 class="about-section-title">Ce que vous trouverez sur Sur le Banc</h2>
+
+      <p class="about-text">
+        Nous couvrons Vernon uniquement, et tout ce qui, concrètement, la fait vibrer :
+      </p>
+
+      <ul class="about-text">
+        <li>événements, initiatives, temps forts de la ville ;</li>
+        <li>commerces, artisans, entrepreneurs ;</li>
+        <li>associations et bénévolat ;</li>
+        <li>projets et actions portés par la collectivité, quand ils changent le quotidien ;</li>
+        <li>histoires de vie, portraits, trajectoires vernonnaises.</li>
+      </ul>
+
+      <p class="about-highlight">
+        Notre objectif : que l’actualité de Vernon ne soit pas une simple succession d’infos,
+        mais une mémoire vivante. Un récit collectif dans lequel on se reconnaît.
+      </p>
+    </section>
+
+    {/* À QUI ÇA S’ADRESSE */}
+    <section class="about-card">
+      <h2 class="about-section-title">À qui s’adresse Sur le Banc Vernon ?</h2>
+
+      <div class="about-grid-2">
+        <div class="about-audience-card">
+          <h3>Aux habitants</h3>
+          <p>
+            Pour redécouvrir sa ville, sortir, soutenir les initiatives locales,
+            et parfois juste se dire : « Ah oui, c’est chez moi. »
+          </p>
+        </div>
+
+        <div class="about-audience-card">
+          <h3>Aux commerçants & entrepreneurs</h3>
+          <p>
+            Pour être visibles autrement que par une publicité :
+            à travers une histoire, une démarche, une vraie présence dans la ville.
+          </p>
+        </div>
+
+        <div class="about-audience-card">
+          <h3>Aux associations</h3>
+          <p>
+            Parce que la vie locale repose souvent sur des épaules discrètes.
+            Sur le Banc met en lumière les engagements, les causes, les événements.
+          </p>
+        </div>
+
+        <div class="about-audience-card">
+          <h3>À la collectivité</h3>
+          <p>
+            Quand un projet public améliore le quotidien, il mérite d’être expliqué
+            et raconté à hauteur d’habitant, avec pédagogie et proximité.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    {/* INDÉPENDANCE */}
+    <section class="about-card">
+      <h2 class="about-section-title">Indépendance</h2>
+
+      <p class="about-text">
+        Sur le Banc Vernon est un média indépendant.
+        C’est ce qui nous permet de garder un ton simple, sincère
+        et fidèle à notre intention de départ : raconter Vernon honnêtement.
+      </p>
+    </section>
+
+    {/* QUI SOMMES-NOUS */}
+    <section class="about-card">
+      <h2 class="about-section-title">Qui se cache derrière Sur le Banc ?</h2>
+
+      <div class="about-people-grid">
+        <div class="about-person">
+          <h3>Quentin</h3>
+          <p>
+            Né en 1994, il porte en lui l’héritage des générations qui ont façonné Vernon.
+            Jadis emporté par la fougue du motocross, aujourd’hui maître bâtisseur à la tête de Vesta Promotion,
+            il regarde sa ville avec les yeux de celui qui connaît le prix des pierres et la valeur des fondations.
+          </p>
+          <p>
+            Ses voyages l’ont mené en Albion et aux confins du Sud-Ouest,
+            mais son cœur revient toujours vers ce coin de Normandie que la Seine caresse avec constance.
+          </p>
+        </div>
+
+        <div class="about-person">
+          <h3>Yann</h3>
+          <p>
+            Âme de poète dans un corps forgé par le rugby,
+            il a grandi dans les quartiers populaires où bat le cœur sincère de Vernon.
+          </p>
+          <p>
+            Des bancs de l’école des Boutardes aux salles du lycée Dumézil,
+            des terrains de rugby aux conseils municipaux, il a vu la ville sous tous ses angles.
+            Armé de son savoir juridique et de son goût du récit, il tisse aujourd’hui des histoires
+            qui nourrissent l’âme collective.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    {/* NOUS CONTACTER */}
+    <section class="about-card">
+      <h2 class="about-section-title">Nous contacter</h2>
+
+      <p class="about-text">
+        Une question, une idée de sujet, une envie de collaboration ?
+        Le plus simple est de passer par notre page « Nous contacter ».
+        Nous lisons chaque message et nous répondons dès que possible.
+      </p>
+
+      <a href="/contact" class="about-contact-cta">
+        Accéder à la page “Nous contacter”
+      </a>
+    </section>
+
+    {/* FAQ */}
+    <section class="about-card">
+      <h2 class="about-section-title">FAQ rapide</h2>
+
+      <div class="about-faq">
+        <div class="about-faq-item">
+          <p class="about-faq-question">
+            Sur le Banc Vernon, c’est quoi exactement ?
+          </p>
+          <p class="about-faq-answer">
+            Un média local indépendant qui raconte l’actualité de Vernon de manière positive et incarnée,
+            à travers des histoires et des formats vidéo.
+          </p>
+        </div>
+
+        <div class="about-faq-item">
+          <p class="about-faq-question">
+            Vous couvrez seulement Vernon ?
+          </p>
+          <p class="about-faq-answer">
+            Oui. Notre ligne est claire : Vernon, et Vernon uniquement.
+          </p>
+        </div>
+
+        <div class="about-faq-item">
+          <p class="about-faq-question">
+            Où peut-on voir vos contenus ?
+          </p>
+          <p class="about-faq-answer">
+            Sur le site et nos réseaux : Facebook, Instagram, TikTok et YouTube.
+          </p>
+        </div>
+
+        <div class="about-faq-item">
+          <p class="about-faq-question">
+            Parlez-vous des projets de la collectivité ?
+          </p>
+          <p class="about-faq-answer">
+            Oui, lorsqu’ils ont un impact concret sur la vie locale et qu’ils méritent d’être expliqués
+            à hauteur d’habitants.
+          </p>
+        </div>
+
+        <div class="about-faq-item">
+          <p class="about-faq-question">
+            Comment vous contacter ?
+          </p>
+          <p class="about-faq-answer">
+            Via la page « Nous contacter » du site. C’est le meilleur moyen pour nous écrire.
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+</Layout>

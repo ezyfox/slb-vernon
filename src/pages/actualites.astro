@@ -1,0 +1,155 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { WORDPRESS_URL } from '../config.js';
+
+let posts = [];
+
+const pageTitle =
+  'Actualités Vernon : infos locales et reportages | Sur le Banc – Vernon';
+const pageDescription =
+  'Toutes les actualités de Vernon racontées par Sur le Banc – Vernon : infos locales, reportages vidéo, initiatives positives et histoires du quotidien.';
+
+// Récupération des articles de la catégorie "actualite"
+try {
+  const catRes = await fetch(
+    `${WORDPRESS_URL}/wp-json/wp/v2/categories?slug=actualite`
+  );
+
+  if (catRes.ok) {
+    const cats = await catRes.json();
+    const cat = cats[0];
+
+    if (cat) {
+      const postsRes = await fetch(
+        `${WORDPRESS_URL}/wp-json/wp/v2/posts?categories=${cat.id}&per_page=50&_embed`
+      );
+
+      if (postsRes.ok) {
+        posts = await postsRes.json();
+      }
+    }
+  }
+} catch (error) {
+  console.error('Erreur lors de la récupération des actualités :', error);
+}
+
+// Image à la une
+function getFeaturedImage(post) {
+  const media = post._embedded?.['wp:featuredmedia']?.[0];
+  if (!media) return null;
+  return {
+    url: media.source_url,
+    alt: media.alt_text || '',
+  };
+}
+
+// Extrait texte sans HTML (un peu plus long que sur la home)
+function getExcerptText(post) {
+  const raw = post.excerpt?.rendered ?? '';
+  const withoutHtml = raw.replace(/<[^>]+>/g, '');
+  return withoutHtml.slice(0, 220) + (withoutHtml.length > 220 ? '…' : '');
+}
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+  {/* INTRO PAGE ACTUALITÉS */}
+  <section style="margin-bottom: 24px;">
+    <h1 style="font-size: 24px; margin: 0 0 8px 0;">
+      Actualités de Vernon
+    </h1>
+    <p style="font-size: 15px; line-height: 1.7; margin: 0 0 8px 0;">
+      Ici, on regroupe les actualités de Vernon racontées par Sur le Banc – Vernon :
+      temps forts de la ville, initiatives locales, vie des commerçants, associations
+      et événements qui font bouger le quotidien.
+    </p>
+    <p style="font-size: 14px; line-height: 1.6; margin: 0;">
+      Sur le Banc est un média local indépendant : nous racontons Vernon en positif,
+      à travers des vidéos, des formats courts et des histoires humaines. Pour en savoir
+      plus sur le projet, rendez-vous sur la page
+      {' '}
+      <a
+        href="/a-propos"
+        style="color:#294596; text-decoration:none; font-weight:500;"
+      >
+        À propos
+      </a>
+      .
+    </p>
+  </section>
+
+  {/* LISTE DES ACTUALITÉS */}
+  {posts.length === 0 ? (
+    <p>Nous n’avons pas encore d’actualités à afficher pour le moment.</p>
+  ) : (
+    <section>
+      <div
+        style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+          gap: 20px;
+        "
+      >
+        {posts.map((post) => {
+          const featured = getFeaturedImage(post);
+          const excerpt = getExcerptText(post);
+
+          return (
+            <article
+              style="
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+              "
+            >
+              {featured && featured.url && (
+                <div class="square-media">
+                  <img
+                    src={featured.url}
+                    alt={featured.alt || ''}
+                  />
+                </div>
+              )}
+
+              <div style="padding: 12px 14px 16px 14px;">
+                <a
+                  href={'/episode/' + post.slug}
+                  style="text-decoration: none; color: inherit;"
+                >
+                  <h2
+                    set:html={post.title.rendered}
+                    style="font-size: 18px; margin: 0 0 6px 0;"
+                  />
+                </a>
+
+                <p style="color: #294596; font-size: 13px; margin: 0 0 8px 0;">
+                  Publié le {new Date(post.date).toLocaleDateString('fr-FR')}
+                </p>
+
+                <p
+                  style="
+                    color: #294596;
+                    font-size: 13px;
+                    margin: 0 0 10px 0;
+                    line-height: 1.6;
+                  "
+                >
+                  {excerpt}
+                </p>
+
+                <a
+                  href={'/episode/' + post.slug}
+                  style="font-size: 13px; color: #294596; text-decoration: none; font-weight: 500;"
+                >
+                  Lire l’article →
+                </a>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  )}
+</Layout>

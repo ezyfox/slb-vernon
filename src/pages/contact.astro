@@ -1,0 +1,453 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const pageTitle = 'Contact – Sur le Banc Vernon, média local à Vernon';
+const pageDescription =
+  'Contactez Sur le Banc Vernon, média local indépendant à Vernon : proposer un sujet, parler d’un événement, mettre en avant un commerce ou une association, imaginer une collaboration.';
+---
+
+<style>
+  .contact-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .contact-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px 22px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+  }
+
+  .contact-intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.1fr);
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .contact-section-title {
+    font-size: 20px;
+    margin: 0 0 10px 0;
+  }
+
+  .contact-lead {
+    font-size: 15px;
+    line-height: 1.7;
+    margin: 0 0 12px 0;
+  }
+
+  .contact-text {
+    font-size: 15px;
+    line-height: 1.7;
+    margin: 0 0 8px 0;
+  }
+
+  .contact-text:last-child {
+    margin-bottom: 0;
+  }
+
+  .contact-tags {
+    background: rgba(41, 69, 150, 0.03);
+    border-radius: 12px;
+    padding: 14px 14px 10px 14px;
+    font-size: 14px;
+  }
+
+  .contact-tags-title {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #294596;
+    margin: 0 0 6px 0;
+  }
+
+  .contact-tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .contact-tag {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: rgba(233, 78, 27, 0.08);
+    color: #294596;
+    white-space: nowrap;
+  }
+
+  /* FORMULAIRE */
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 4px;
+  }
+
+  .contact-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 14px;
+  }
+
+  .contact-label {
+    font-weight: 500;
+  }
+
+  .contact-label span {
+    color: #E94E1B;
+  }
+
+  .contact-input,
+  .contact-textarea,
+  .contact-select {
+    border-radius: 999px;
+    border: 1px solid #d1d5db;
+    padding: 9px 14px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #294596;
+    background: #f9fafb;
+    outline: none;
+  }
+
+  .contact-textarea {
+    border-radius: 12px;
+    min-height: 120px;
+    resize: vertical;
+  }
+
+  .contact-input:focus,
+  .contact-select:focus,
+  .contact-textarea:focus {
+    border-color: #294596;
+    box-shadow: 0 0 0 1px rgba(41, 69, 150, 0.15);
+    background: #ffffff;
+  }
+
+  .contact-help {
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+  .contact-submit {
+    margin-top: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 22px;
+    border-radius: 999px;
+    border: none;
+    background: #E94E1B;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .contact-submit:hover {
+    filter: brightness(1.05);
+  }
+
+  .contact-note {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 8px;
+  }
+
+  /* AUTRES MOYENS DE CONTACT */
+  .contact-ways {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .contact-email {
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .contact-email a {
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .contact-socials {
+    background: rgba(41, 69, 150, 0.03);
+    border-radius: 12px;
+    padding: 14px 14px 12px 14px;
+    font-size: 14px;
+  }
+
+  .contact-socials-title {
+    margin: 0 0 8px 0;
+    font-size: 15px;
+    color: #E94E1B;
+  }
+
+  .contact-socials-text {
+    margin: 0 0 10px 0;
+    line-height: 1.6;
+  }
+
+  .contact-socials-icons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .contact-socials-icons a {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+  }
+
+  .contact-socials-icons img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+  }
+
+  @media (max-width: 899px) {
+    .contact-intro {
+      grid-template-columns: 1fr;
+    }
+
+    .contact-ways {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+>
+  <div class="contact-wrapper">
+    {/* INTRO */}
+    <section class="contact-card contact-intro">
+      <div>
+        <h1 class="contact-section-title">
+          Nous contacter
+        </h1>
+
+        <p class="contact-lead">
+          Une idée de sujet, un événement à venir, un commerce à mettre en lumière,
+          une association, ou simplement envie de nous parler de votre ville ?
+        </p>
+
+        <p class="contact-text">
+          Sur le Banc Vernon existe pour raconter ce qui fait vibrer Vernon au quotidien.
+          Si vous pensez que votre histoire, votre projet ou votre événement mérite d’être partagé,
+          vous êtes au bon endroit.
+        </p>
+
+        <p class="contact-text">
+          Dites-nous qui vous êtes, ce que vous avez en tête, et on revient vers vous dès que possible.
+        </p>
+      </div>
+
+      <aside class="contact-tags">
+        <p class="contact-tags-title">Vous pouvez nous écrire pour…</p>
+        <div class="contact-tag-list">
+          <span class="contact-tag">Proposer un sujet</span>
+          <span class="contact-tag">Parler d’un événement</span>
+          <span class="contact-tag">Mettre en avant un commerce</span>
+          <span class="contact-tag">Présenter une association</span>
+          <span class="contact-tag">Imaginer une collaboration</span>
+        </div>
+      </aside>
+    </section>
+
+    {/* FORMULAIRE (connecté à FormSubmit) */}
+    <section class="contact-card">
+      <h2 class="contact-section-title">Nous écrire via le formulaire</h2>
+
+      <form
+        class="contact-form"
+        method="POST"
+        action="https://formsubmit.co/surlebanc.vernon@gmail.com"
+      >
+        {/* Champ anti-spam (honeypot) */}
+        <input type="text" name="_honey" style="display:none" />
+        {/* Désactiver captcha FormSubmit si besoin */}
+        <input type="hidden" name="_captcha" value="false" />
+        {/* Sujet de l’email que tu recevras */}
+        <input
+          type="hidden"
+          name="_subject"
+          value="Nouveau message depuis le formulaire Sur le Banc – Vernon"
+        />
+        {/* URL de redirection après envoi (adapte-la si tu crées une page /merci) */}
+        <input
+          type="hidden"
+          name="_next"
+          value="https://vernon-actualites.fr/merci"
+        />
+        {/* Template d’email en tableau pour plus de lisibilité */}
+        <input type="hidden" name="_template" value="table" />
+
+        <div class="contact-field">
+          <label class="contact-label" for="nom">
+            Nom / Prénom <span>*</span>
+          </label>
+          <input
+            id="nom"
+            name="nom"
+            type="text"
+            class="contact-input"
+            placeholder="Votre nom"
+            required
+          />
+        </div>
+
+        <div class="contact-field">
+          <label class="contact-label" for="email">
+            Adresse email <span>*</span>
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            class="contact-input"
+            placeholder="vous@exemple.fr"
+            required
+          />
+          <p class="contact-help">
+            Nous utiliserons votre email uniquement pour vous répondre.
+          </p>
+        </div>
+
+        <div class="contact-field">
+          <label class="contact-label" for="type">
+            Vous êtes… <span>*</span>
+          </label>
+          <select
+            id="type"
+            name="type"
+            class="contact-select"
+            required
+          >
+            <option value="">Sélectionnez une option</option>
+            <option value="habitant">Habitant(e) de Vernon ou alentours</option>
+            <option value="commerce">Commerçant(e) / entrepreneur</option>
+            <option value="association">Association</option>
+            <option value="collectivite">Collectivité / institution</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+
+        <div class="contact-field">
+          <label class="contact-label" for="sujet">
+            Sujet de votre message <span>*</span>
+          </label>
+          <input
+            id="sujet"
+            name="sujet"
+            type="text"
+            class="contact-input"
+            placeholder="Ex : Proposer un sujet sur un événement local"
+            required
+          />
+        </div>
+
+        <div class="contact-field">
+          <label class="contact-label" for="message">
+            Votre message <span>*</span>
+          </label>
+          <textarea
+            id="message"
+            name="message"
+            class="contact-textarea"
+            placeholder="Expliquez-nous en quelques lignes ce que vous avez envie de partager…"
+            required
+          ></textarea>
+        </div>
+
+        <button type="submit" class="contact-submit">
+          Envoyer mon message
+        </button>
+
+        <p class="contact-note">
+          En envoyant ce formulaire, votre message nous est transmis par email sur notre adresse
+          de contact. Nous revenons vers vous dès que possible.
+        </p>
+      </form>
+    </section>
+
+    {/* AUTRES MOYENS DE CONTACT */}
+    <section class="contact-card">
+      <h2 class="contact-section-title">Autres moyens de nous contacter</h2>
+
+      <div class="contact-ways">
+        <div class="contact-email">
+          <p class="contact-text">
+            Vous préférez passer directement par votre messagerie ?
+          </p>
+          <p class="contact-text">
+            Écrivez-nous à :
+            <br />
+            <a href="mailto:surlebanc.vernon@gmail.com">
+              surlebanc.vernon@gmail.com
+            </a>
+          </p>
+          <p class="contact-text">
+            N’hésitez pas à préciser votre nom, votre lien avec Vernon et, si besoin,
+            un numéro pour vous rappeler.
+          </p>
+        </div>
+
+        <aside class="contact-socials">
+          <h3 class="contact-socials-title">Nous suivre au quotidien</h3>
+          <p class="contact-socials-text">
+            Une grande partie de nos contenus est publiée sur les réseaux sociaux.
+            Pour ne rien manquer des prochains épisodes :
+          </p>
+
+          <div class="contact-socials-icons">
+            <a
+              href="https://www.facebook.com/profile.php?id=61575273052045"
+              aria-label="Facebook"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <img src="/icons/facebook-orange.png" alt="Facebook" />
+            </a>
+            <a
+              href="https://www.instagram.com/slb_vernon/"
+              aria-label="Instagram"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <img src="/icons/instagram-orange.png" alt="Instagram" />
+            </a>
+            <a
+              href="https://www.tiktok.com/@slb_vernon"
+              aria-label="TikTok"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <img src="/icons/tiktok-orange.png" alt="TikTok" />
+            </a>
+            <a
+              href="https://www.youtube.com/@slb_vernon"
+              aria-label="YouTube"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <img src="/icons/youtube-orange.png" alt="YouTube" />
+            </a>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </div>
+</Layout>

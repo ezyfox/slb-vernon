@@ -1,0 +1,143 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { WORDPRESS_URL } from '../config.js';
+
+let posts = [];
+
+const pageTitle = 'On pousse la porte : à la découverte de Vernon et des Vernonnais | Sur le Banc – Vernon';
+const pageDescription =
+  'On pousse la porte, la série de Sur le Banc – Vernon qui teste et fait découvrir des adresses à Vernon : lieux, boutiques, gourmandises et expériences à partager.';
+
+try {
+  const catRes = await fetch(
+    `${WORDPRESS_URL}/wp-json/wp/v2/categories?slug=on-pousse-la-porte`
+  );
+
+  if (catRes.ok) {
+    const cats = await catRes.json();
+    const cat = cats[0];
+
+    if (cat) {
+      const postsRes = await fetch(
+        `${WORDPRESS_URL}/wp-json/wp/v2/posts?categories=${cat.id}&per_page=50&_embed`
+      );
+
+      if (postsRes.ok) {
+        posts = await postsRes.json();
+      }
+    }
+  }
+} catch (error) {
+  console.error('Erreur lors de la récupération des posts On pousse la porte :', error);
+}
+
+function getFeaturedImage(post) {
+  const media = post._embedded?.['wp:featuredmedia']?.[0];
+  if (!media) return null;
+  return {
+    url: media.source_url,
+    alt: media.alt_text || '',
+  };
+}
+
+function getExcerptText(post) {
+  const raw = post.excerpt?.rendered ?? '';
+  const withoutHtml = raw.replace(/<[^>]+>/g, '');
+  return withoutHtml.slice(0, 160) + (withoutHtml.length > 160 ? '…' : '');
+}
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+  <section style="margin-bottom: 24px;">
+  <h1 style="font-size: 24px; margin: 0 0 8px 0;">
+    On pousse la porte
+  </h1>
+  <p style="font-size: 15px; line-height: 1.7; margin: 0;">
+    Dans On pousse la porte, on entre dans les lieux, les commerces et les adresses de Vernon
+    pour les découvrir “comme si on y était” : dégustations, tests, premières impressions et
+    retours en toute simplicité.
+    Si vous avez une adresse à nous faire découvrir, un lieu à tester ou un format à imaginer
+    ensemble, le plus simple est de passer par la page
+    {' '}
+    <a href="/contact" style="color:#294596; text-decoration:none; font-weight:500;">
+      Contact
+    </a>
+    .
+  </p>
+</section>
+
+  {posts.length === 0 ? (
+    <p>Pas encore d’épisodes publiés pour cette série.</p>
+  ) : (
+    <section>
+      <div
+        style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+          gap: 20px;
+        "
+      >
+        {posts.map((post) => {
+          const featured = getFeaturedImage(post);
+          const excerpt = getExcerptText(post);
+
+          return (
+            <article
+              style="
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+              "
+            >
+              {featured && featured.url && (
+                <div class="square-media">
+                  <img
+                    src={featured.url}
+                    alt={featured.alt || ''}
+                  />
+                </div>
+              )}
+
+              <div style="padding: 12px 14px 16px 14px;">
+                <a
+                  href={'/episode/' + post.slug}
+                  style="text-decoration: none; color: inherit;"
+                >
+                  <h2
+                    set:html={post.title.rendered}
+                    style="font-size: 18px; margin: 0 0 6px 0;"
+                  />
+                </a>
+
+                <p style="color: #294596; font-size: 13px; margin: 0 0 8px 0;">
+                  Publié le {new Date(post.date).toLocaleDateString('fr-FR')}
+                </p>
+
+                <p
+                  style="
+                    color: #294596;
+                    font-size: 13px;
+                    margin: 0 0 10px 0;
+                    line-height: 1.6;
+                  "
+                >
+                  {excerpt}
+                </p>
+
+                <a
+                  href={'/episode/' + post.slug}
+                  style="font-size: 13px; color: #294596; text-decoration: none; font-weight: 500;"
+                >
+                  Voir l’épisode →
+                </a>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  )}
+</Layout>

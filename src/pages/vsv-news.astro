@@ -1,0 +1,137 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { WORDPRESS_URL } from '../config.js';
+
+let posts = [];
+
+try {
+  // Catégorie "vsv-news"
+  const catRes = await fetch(
+    `${WORDPRESS_URL}/wp-json/wp/v2/categories?slug=vsv-news`
+  );
+
+  if (catRes.ok) {
+    const cats = await catRes.json();
+    const cat = cats[0];
+
+    if (cat) {
+      const postsRes = await fetch(
+        `${WORDPRESS_URL}/wp-json/wp/v2/posts?categories=${cat.id}&per_page=20&_embed`
+      );
+
+      if (postsRes.ok) {
+        posts = await postsRes.json();
+      }
+    }
+  }
+} catch (error) {
+  console.error('Erreur lors de la récupération des épisodes VSV News :', error);
+}
+
+// Image à la une
+function getFeaturedImage(post) {
+  const media = post._embedded?.['wp:featuredmedia']?.[0];
+  if (!media) return null;
+  return {
+    url: media.source_url,
+    alt: media.alt_text || '',
+  };
+}
+
+// Extrait court
+function getExcerptText(post) {
+  const raw = post.excerpt?.rendered ?? '';
+  const withoutHtml = raw.replace(/<[^>]+>/g, '');
+  return withoutHtml.slice(0, 180) + (withoutHtml.length > 180 ? '…' : '');
+}
+---
+
+<Layout
+  title="VSV News | Sur le Banc – Vernon"
+  description="Tous les épisodes de VSV News : l’actualité positive de Vernon, ses projets, ses événements et ses initiatives locales."
+>
+  <section style="margin-bottom: 32px;">
+    <h1 style="font-size: 26px; margin: 0 0 16px 0;">
+      VSV News
+    </h1>
+    <p style="margin: 0 0 20px 0; color: #294596; font-size: 15px; line-height: 1.6;">
+      Le format info de Sur le Banc – Vernon : projets de la ville, événements, initiatives
+      et actualité locale racontés de manière positive.
+      Retrouvez ici tous les épisodes de <strong>VSV News</strong>.
+    </p>
+  </section>
+
+  {posts.length === 0 ? (
+    <p>Aucun épisode n’est disponible pour le moment dans cette série.</p>
+  ) : (
+    <section
+      style="
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+      "
+    >
+      {posts.map((post) => {
+        const featured = getFeaturedImage(post);
+        const excerpt = getExcerptText(post);
+
+        return (
+          <article
+            style="
+              background: white;
+              border-radius: 12px;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+              overflow: hidden;
+              display: flex;
+              flex-direction: column;
+            "
+          >
+            {featured && featured.url && (
+              <div class="square-media">
+                <img
+                  src={featured.url}
+                  alt={featured.alt || ''}
+                />
+              </div>
+            )}
+
+            <div style="padding: 12px 14px 16px 14px;">
+              <a
+                href={'/episode/' + post.slug}
+                style="text-decoration: none; color: inherit;"
+              >
+                <h2
+                  set:html={post.title.rendered}
+                  style="font-size: 18px; margin: 0 0 6px 0;"
+                />
+              </a>
+
+              <p style="color: #294596; font-size: 13px; margin: 0 0 8px 0;">
+                Publié le {new Date(post.date).toLocaleDateString('fr-FR')}
+              </p>
+
+              <p
+                style="
+                  color: #294596;
+                  font-size: 13px;
+                  margin: 0 0 10px 0;
+                  line-height: 1.6;
+                "
+              >
+                {excerpt}
+              </p>
+
+              <a
+                href={'/episode/' + post.slug}
+                style="font-size: 13px; color: #294596; text-decoration: none; font-weight: 500;"
+              >
+                Voir l’épisode →
+              </a>
+            </div>
+          </article>
+        );
+      })}
+    </section>
+  )}
+</Layout>

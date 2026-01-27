@@ -1,0 +1,1028 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { WORDPRESS_URL } from '../config.js';
+
+let lastPost = null;
+let latestActualites = [];
+
+let secretsVernonPosts = [];
+let onPousseLaPortePosts = [];
+let auCoinDeLaRuePosts = [];
+let vernonTalkShowPosts = [];
+
+/** Transforme une URL YouTube (watch, youtu.be, shorts…) en URL embed */
+function getYoutubeEmbedUrl(url) {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    let id = '';
+
+    if (u.hostname === 'youtu.be') {
+      id = u.pathname.slice(1);
+    } else if (u.hostname.includes('youtube.com')) {
+      if (u.pathname === '/watch') {
+        id = u.searchParams.get('v') ?? '';
+      } else if (u.pathname.startsWith('/embed/')) {
+        id = u.pathname.split('/embed/')[1] ?? '';
+      } else if (u.pathname.startsWith('/shorts/')) {
+        id = u.pathname.split('/shorts/')[1] ?? '';
+      }
+    }
+
+    if (!id) return url;
+    return `https://www.youtube.com/embed/${id}`;
+  } catch (e) {
+    return url;
+  }
+}
+
+async function fetchCategoryPosts(slug, perPage = 4) {
+  try {
+    const catRes = await fetch(
+      `${WORDPRESS_URL}/wp-json/wp/v2/categories?slug=${slug}`
+    );
+    if (!catRes.ok) return [];
+
+    const cats = await catRes.json();
+    const cat = cats[0];
+    if (!cat) return [];
+
+    const postsRes = await fetch(
+      `${WORDPRESS_URL}/wp-json/wp/v2/posts?categories=${cat.id}&per_page=${perPage}&_embed`
+    );
+    if (!postsRes.ok) return [];
+
+    return await postsRes.json();
+  } catch (error) {
+    console.error(`Erreur lors de la récupération des posts pour ${slug} :`, error);
+    return [];
+  }
+}
+
+try {
+  // Dernier post global pour le hero
+  const lastPostRes = await fetch(
+    `${WORDPRESS_URL}/wp-json/wp/v2/posts?per_page=1&_embed`
+  );
+  if (lastPostRes.ok) {
+    const arr = await lastPostRes.json();
+    lastPost = arr[0] ?? null;
+  }
+
+  // 4 dernières actualités
+  latestActualites = await fetchCategoryPosts('actualite', 4);
+
+  // Séries
+  secretsVernonPosts = await fetchCategoryPosts('secrets-de-vernon', 4);
+  onPousseLaPortePosts = await fetchCategoryPosts('on-pousse-la-porte', 4);
+  auCoinDeLaRuePosts = await fetchCategoryPosts('au-coin-de-la-rue', 4);
+  vernonTalkShowPosts = await fetchCategoryPosts('vernon-talk-show', 4);
+} catch (error) {
+  console.error('Erreur lors de la récupération des contenus WordPress :', error);
+}
+
+// Image à la une
+function getFeaturedImage(post) {
+  const media = post._embedded?.['wp:featuredmedia']?.[0];
+  if (!media) return null;
+  return {
+    url: media.source_url,
+    alt: media.alt_text || '',
+  };
+}
+
+// Extrait court (cards + hero)
+function getExcerptText(post) {
+  const raw = post.excerpt?.rendered ?? '';
+  const withoutHtml = raw.replace(/<[^>]+>/g, '');
+  return withoutHtml.slice(0, 140) + (withoutHtml.length > 140 ? '…' : '');
+}
+
+// Extrait + vidéo hero
+const heroExcerpt = lastPost ? getExcerptText(lastPost) : '';
+const heroVideoUrlRaw = lastPost?.acf?.video_url ?? null;
+const heroVideoUrl = heroVideoUrlRaw ? getYoutubeEmbedUrl(heroVideoUrlRaw) : null;
+const heroFeatured = lastPost ? getFeaturedImage(lastPost) : null;
+---
+
+<style is:global>
+  .slb-hero {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 32px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 24px;
+    align-items: center;
+  }
+
+  .slb-hero__label {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #294596;
+    margin: 0 0 8px 0;
+  }
+
+  .slb-hero__title {
+    font-size: 26px;
+    margin: 0 0 12px 0;
+  }
+
+  .slb-hero__meta {
+    color: #294596;
+    font-size: 14px;
+    margin: 0 0 8px 0;
+  }
+
+  .slb-hero__excerpt {
+    color: #294596;
+    font-size: 14px;
+    margin: 0 0 16px 0;
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .slb-hero__cta {
+    display: inline-block;
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: #E94E1B;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .slb-hero__video {
+    width: 100%;
+  }
+
+  .slb-hero__video-inner {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #111827;
+  }
+
+  .slb-hero__video-inner iframe,
+  .slb-hero__video-inner img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: 12px;
+    object-fit: cover;
+  }
+
+  .slb-hero__video-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #e5e7eb;
+    font-size: 13px;
+    text-align: center;
+    padding: 16px;
+  }
+
+  .slb-hero__video--mobile {
+    display: none;
+    margin: 12px 0 10px;
+  }
+
+  .slb-hero__video--desktop {
+    display: block;
+  }
+
+  /* Grille des cartes (actualités + séries) : 4 / 2 / 1 */
+  .slb-card-grid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  @media (max-width: 1024px) {
+    .slb-card-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .slb-card-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 899px) {
+    .slb-hero {
+      grid-template-columns: 1fr;
+    }
+
+    .slb-hero__video--desktop {
+      display: none;
+    }
+
+    .slb-hero__video--mobile {
+      display: block;
+    }
+  }
+</style>
+
+<Layout
+  title="Actualités Vernon et vidéos locales | Sur le Banc – Vernon"
+  description="Sur le Banc – Vernon est un média local indépendant qui raconte l’actualité de Vernon en positif : commerçants, événements, patrimoine, initiatives et histoires humaines."
+>
+<section style="margin-bottom: 24px;">
+    <h1 style="font-size: 24px; margin: 0 0 8px 0;">
+      Sur le Banc – Vernon, média local d’actualités à Vernon
+    </h1>
+    <p style="font-size: 15px; line-height: 1.7; margin: 0;">
+      Sur le Banc – Vernon est un média local indépendant qui raconte l’actualité de Vernon
+      à travers des vidéos et des histoires positives : commerçants, événements, initiatives,
+      patrimoine et vies du quotidien. Retrouvez ici nos derniers contenus publiés.
+    </p>
+  </section>
+
+  {lastPost && (
+    <section class="slb-hero">
+      <div>
+        <p class="slb-hero__label">Dernier contenu publié</p>
+
+        <h2
+          class="slb-hero__title"
+          set:html={lastPost.title.rendered}
+        />
+
+        {/* Mobile : vidéo entre titre et date */}
+        <div class="slb-hero__video slb-hero__video--mobile">
+          <div class="slb-hero__video-inner">
+            {heroVideoUrl ? (
+              <iframe
+                src={heroVideoUrl}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+                loading="lazy"
+              />
+            ) : heroFeatured ? (
+              <img
+                src={heroFeatured.url}
+                alt={heroFeatured.alt || ''}
+              />
+            ) : (
+              <div class="slb-hero__video-placeholder">
+                Ici, on viendra intégrer le player vidéo (YouTube, Facebook…)
+                de l’épisode mis en avant, dès que les champs vidéo seront structurés dans WordPress.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <p class="slb-hero__meta">
+          Publié le {new Date(lastPost.date).toLocaleDateString('fr-FR')}
+        </p>
+
+        {heroExcerpt && (
+          <p class="slb-hero__excerpt">
+            {heroExcerpt}
+          </p>
+        )}
+
+        <a
+          href={'/episode/' + lastPost.slug}
+          class="slb-hero__cta"
+        >
+          En savoir plus
+        </a>
+      </div>
+
+      {/* Desktop : vidéo à droite */}
+      <div class="slb-hero__video slb-hero__video--desktop">
+        <div class="slb-hero__video-inner">
+          {heroVideoUrl ? (
+            <iframe
+              src={heroVideoUrl}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+              loading="lazy"
+            />
+          ) : heroFeatured ? (
+            <img
+              src={heroFeatured.url}
+              alt={heroFeatured.alt || ''}
+            />
+          ) : (
+            <div class="slb-hero__video-placeholder">
+              Ici, on viendra intégrer le player vidéo (YouTube, Facebook…)
+              de l’épisode mis en avant, dès que les champs vidéo seront structurés dans WordPress.
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  )}
+
+  {/* SECTION ACTUALITÉS */}
+  <section style="margin-bottom: 32px;">
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 12px;
+        gap: 12px;
+        flex-wrap: wrap;
+      "
+    >
+      <h2
+        style="
+          font-size: 20px;
+          margin: 0;
+          color: #E94E1B;
+        "
+      >
+        Les dernières actualités sur Vernon
+      </h2>
+
+      <a
+        href="/actualites"
+        style="
+          font-size: 14px;
+          color: #294596;
+          text-decoration: none;
+          font-weight: 500;
+        "
+      >
+        Voir tous les articles →
+      </a>
+      <p style="font-size: 14px; margin: 0 0 12px 0; color: #294596;">
+  Ici, on regroupe les dernières actualités de Vernon : temps forts de la ville, initiatives locales,
+  vie des commerçants et événements. Pour toutes les infos, rendez-vous sur la page
+  {' '}
+  <a href="/actualites" style="color:#294596; text-decoration:none; font-weight:500;">
+    Actualités de Vernon
+  </a>
+  .
+</p>
+
+    </div>
+
+    {latestActualites.length === 0 ? (
+      <p>Nous n’avons pas encore d’actualités à afficher.</p>
+    ) : (
+      <div class="slb-card-grid">
+        {latestActualites.map((post) => {
+          const featured = getFeaturedImage(post);
+          const excerpt = getExcerptText(post);
+
+          return (
+            <article
+              style="
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+              "
+            >
+              {featured && featured.url && (
+                <div class="square-media">
+                  <img
+                    src={featured.url}
+                    alt={featured.alt || ''}
+                  />
+                </div>
+              )}
+
+              <div style="padding: 12px 14px 16px 14px;">
+                <a
+                  href={'/episode/' + post.slug}
+                  style="text-decoration: none; color: inherit;"
+                >
+                  <h3
+                    set:html={post.title.rendered}
+                    style="font-size: 18px; margin: 0 0 6px 0;"
+                  />
+                </a>
+
+                <p style="color: #294596; font-size: 13px; margin: 0 0 8px 0;">
+                  Publié le {new Date(post.date).toLocaleDateString('fr-FR')}
+                </p>
+
+                <p
+                  style="
+                    color: #294596;
+                    font-size: 13px;
+                    margin: 0 0 10px 0;
+                    line-height: 1.6;
+                  "
+                >
+                  {excerpt}
+                </p>
+
+                <a
+                  href={'/episode/' + post.slug}
+                  style="font-size: 13px; color: #294596; text-decoration: none; font-weight: 500;"
+                >
+                  Lire l’article →
+                </a>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    )}
+  </section>
+
+  {/* SECTION DOUBLE BLOC : NOUS CONTACTER / NOUS SUIVRE */}
+  <section style="margin-bottom: 32px;">
+    <div
+      style="
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 20px;
+      "
+    >
+      {/* Bloc NOUS CONTACTER */}
+      <div class="slb-panel-orange" style="width: auto; max-width: 100%;">
+        <h2
+          style="
+            margin: 0 0 10px 0;
+            font-size: 20px;
+            color: #ffffff;
+          "
+        >
+          Nous contacter
+        </h2>
+
+        <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 1.6;">
+  Vous souhaitez qu’on parle de vous, de votre événement à Vernon ou d’une initiative locale ?
+  Vous pouvez nous écrire avec plaisir : Sur le Banc – Vernon est un média local indépendant,
+  au service des habitants, des commerçants et des associations.
+        </p>
+
+
+        <a
+          href="/contact"
+          style="
+            display: inline-block;
+            padding: 10px 18px;
+            border-radius: 999px;
+            background: #ffffff;
+            color: #E94E1B;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            text-align: center;
+          "
+        >
+          Nous écrire
+        </a>
+      </div>
+
+      {/* Bloc NOUS SUIVRE */}
+      <div class="slb-panel-orange" style="width: auto; max-width: 100%;">
+        <h2
+          style="
+            margin: 0 0 10px 0;
+            font-size: 20px;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+          "
+        >
+          Nous suivre
+        </h2>
+
+        <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 1.6;">
+          Suivez Sur le Banc – Vernon sur vos réseaux préférés pour ne rien manquer des prochains épisodes
+          et des coulisses du média.
+        </p>
+
+        <div
+          style="
+            display: flex;
+            gap: 8px;
+            flex-wrap: nowrap;
+            margin-top: auto;
+            padding-top: 16px;
+          "
+        >
+          <a
+            href="https://www.facebook.com/profile.php?id=61575273052045"
+            aria-label="Facebook"
+            target="_blank"
+            rel="noreferrer"
+            style="
+              flex: 1;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 8px 0;
+              border-radius: 999px;
+              background: #ffffff;
+              text-decoration: none;
+            "
+          >
+            <img
+              src="/icons/facebook-orange.png"
+              alt="Facebook"
+              style="height: 20px; width: 20px; object-fit: contain;"
+            />
+          </a>
+
+          <a
+            href="https://www.instagram.com/slb_vernon/"
+            aria-label="Instagram"
+            target="_blank"
+            rel="noreferrer"
+            style="
+              flex: 1;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 8px 0;
+              border-radius: 999px;
+              background: #ffffff;
+              text-decoration: none;
+            "
+          >
+            <img
+              src="/icons/instagram-orange.png"
+              alt="Instagram"
+              style="height: 20px; width: 20px; object-fit: contain;"
+            />
+          </a>
+
+          <a
+            href="https://www.tiktok.com/@slb_vernon"
+            aria-label="TikTok"
+            target="_blank"
+            rel="noreferrer"
+            style="
+              flex: 1;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 8px 0;
+              border-radius: 999px;
+              background: #ffffff;
+              text-decoration: none;
+            "
+          >
+            <img
+              src="/icons/tiktok-orange.png"
+              alt="TikTok"
+              style="height: 20px; width: 20px; object-fit: contain;"
+            />
+          </a>
+
+          <a
+            href="https://www.youtube.com/@slb_vernon"
+            aria-label="YouTube"
+            target="_blank"
+            rel="noreferrer"
+            style="
+              flex: 1;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 8px 0;
+              border-radius: 999px;
+              background: #ffffff;
+              text-decoration: none;
+            "
+          >
+            <img
+              src="/icons/youtube-orange.png"
+              alt="YouTube"
+              style="height: 20px; width: 20px; object-fit: contain;"
+            />
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* SÉRIE : SECRETS DE VERNON */}
+  <section style="margin-bottom: 32px;">
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 12px;
+        gap: 12px;
+        flex-wrap: wrap;
+      "
+    >
+      <h2
+        style="
+          font-size: 20px;
+          margin: 0;
+          color: #E94E1B;
+        "
+      >
+        Secrets de Vernon
+      </h2>
+
+      <a
+        href="/secrets-de-vernon"
+        style="
+          font-size: 14px;
+          color: #294596;
+          text-decoration: none;
+          font-weight: 500;
+        "
+      >
+        Voir tous les épisodes →
+      </a>
+    </div>
+
+    {secretsVernonPosts.length === 0 ? (
+      <p>Pas encore d’épisodes publiés pour cette série.</p>
+    ) : (
+      <div class="slb-card-grid">
+        {secretsVernonPosts.map((post) => {
+          const featured = getFeaturedImage(post);
+          const excerpt = getExcerptText(post);
+
+          return (
+            <article
+              style="
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+              "
+            >
+              {featured && featured.url && (
+                <div class="square-media">
+                  <img
+                    src={featured.url}
+                    alt={featured.alt || ''}
+                  />
+                </div>
+              )}
+
+              <div style="padding: 12px 14px 16px 14px;">
+                <a
+                  href={'/episode/' + post.slug}
+                  style="text-decoration: none; color: inherit;"
+                >
+                  <h3
+                    set:html={post.title.rendered}
+                    style="font-size: 18px; margin: 0 0 6px 0;"
+                  />
+                </a>
+
+                <p style="color: #294596; font-size: 13px; margin: 0 0 8px 0;">
+                  Publié le {new Date(post.date).toLocaleDateString('fr-FR')}
+                </p>
+
+                <p
+                  style="
+                    color: #294596;
+                    font-size: 13px;
+                    margin: 0 0 10px 0;
+                    line-height: 1.6;
+                  "
+                >
+                  {excerpt}
+                </p>
+
+                <a
+                  href={'/episode/' + post.slug}
+                  style="font-size: 13px; color: #294596; text-decoration: none; font-weight: 500;"
+                >
+                  Voir l’épisode →
+                </a>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    )}
+  </section>
+
+  {/* SÉRIE : ON POUSSE LA PORTE */}
+  <section style="margin-bottom: 32px;">
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 12px;
+        gap: 12px;
+        flex-wrap: wrap;
+      "
+    >
+      <h2
+        style="
+          font-size: 20px;
+          margin: 0;
+          color: #E94E1B;
+        "
+      >
+        On pousse la porte
+      </h2>
+
+      <a
+        href="/on-pousse-la-porte"
+        style="
+          font-size: 14px;
+          color: #294596;
+          text-decoration: none;
+          font-weight: 500;
+        "
+      >
+        Voir tous les épisodes →
+      </a>
+    </div>
+
+    {onPousseLaPortePosts.length === 0 ? (
+      <p>Pas encore d’épisodes publiés pour cette série.</p>
+    ) : (
+      <div class="slb-card-grid">
+        {onPousseLaPortePosts.map((post) => {
+          const featured = getFeaturedImage(post);
+          const excerpt = getExcerptText(post);
+
+          return (
+            <article
+              style="
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+              "
+            >
+              {featured && featured.url && (
+                <div class="square-media">
+                  <img
+                    src={featured.url}
+                    alt={featured.alt || ''}
+                  />
+                </div>
+              )}
+
+              <div style="padding: 12px 14px 16px 14px;">
+                <a
+                  href={'/episode/' + post.slug}
+                  style="text-decoration: none; color: inherit;"
+                >
+                  <h3
+                    set:html={post.title.rendered}
+                    style="font-size: 18px; margin: 0 0 6px 0;"
+                  />
+                </a>
+
+                <p style="color: #294596; font-size: 13px; margin: 0 0 8px 0;">
+                  Publié le {new Date(post.date).toLocaleDateString('fr-FR')}
+                </p>
+
+                <p
+                  style="
+                    color: #294596;
+                    font-size: 13px;
+                    margin: 0 0 10px 0;
+                    line-height: 1.6;
+                  "
+                >
+                  {excerpt}
+                </p>
+
+                <a
+                  href={'/episode/' + post.slug}
+                  style="font-size: 13px; color: #294596; text-decoration: none; font-weight: 500;"
+                >
+                  Voir l’épisode →
+                </a>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    )}
+  </section>
+
+  {/* SÉRIE : AU COIN DE LA RUE */}
+  <section style="margin-bottom: 32px;">
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 12px;
+        gap: 12px;
+        flex-wrap: wrap;
+      "
+    >
+      <h2
+        style="
+          font-size: 20px;
+          margin: 0;
+          color: #E94E1B;
+        "
+      >
+        Au coin de la Rue
+      </h2>
+
+      <a
+        href="/au-coin-de-la-rue"
+        style="
+          font-size: 14px;
+          color: #294596;
+          text-decoration: none;
+          font-weight: 500;
+        "
+      >
+        Voir tous les épisodes →
+      </a>
+    </div>
+
+    {auCoinDeLaRuePosts.length === 0 ? (
+      <p>Pas encore d’épisodes publiés pour cette série.</p>
+    ) : (
+      <div class="slb-card-grid">
+        {auCoinDeLaRuePosts.map((post) => {
+          const featured = getFeaturedImage(post);
+          const excerpt = getExcerptText(post);
+
+          return (
+            <article
+              style="
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+              "
+            >
+              {featured && featured.url && (
+                <div class="square-media">
+                  <img
+                    src={featured.url}
+                    alt={featured.alt || ''}
+                  />
+                </div>
+              )}
+
+              <div style="padding: 12px 14px 16px 14px;">
+                <a
+                  href={'/episode/' + post.slug}
+                  style="text-decoration: none; color: inherit;"
+                >
+                  <h3
+                    set:html={post.title.rendered}
+                    style="font-size: 18px; margin: 0 0 6px 0;"
+                  />
+                </a>
+
+                <p style="color: #294596; font-size: 13px; margin: 0 0 8px 0;">
+                  Publié le {new Date(post.date).toLocaleDateString('fr-FR')}
+                </p>
+
+                <p
+                  style="
+                    color: #294596;
+                    font-size: 13px;
+                    margin: 0 0 10px 0;
+                    line-height: 1.6;
+                  "
+                >
+                  {excerpt}
+                </p>
+
+                <a
+                  href={'/episode/' + post.slug}
+                  style="font-size: 13px; color: #294596; text-decoration: none; font-weight: 500;"
+                >
+                  Voir l’épisode →
+                </a>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    )}
+  </section>
+
+  {/* SÉRIE : VERNON TALK-SHOW */}
+  <section style="margin-bottom: 32px;">
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 12px;
+        gap: 12px;
+        flex-wrap: wrap;
+      "
+    >
+      <h2
+        style="
+          font-size: 20px;
+          margin: 0;
+          color: #E94E1B;
+        "
+      >
+        Vernon Talk-Show
+      </h2>
+
+      <a
+        href="/vernon-talk-show"
+        style="
+          font-size: 14px;
+          color: #294596;
+          text-decoration: none;
+          font-weight: 500;
+        "
+      >
+        Voir tous les épisodes →
+      </a>
+    </div>
+
+    {vernonTalkShowPosts.length === 0 ? (
+      <p>Pas encore d’épisodes publiés pour cette série.</p>
+    ) : (
+      <div class="slb-card-grid">
+        {vernonTalkShowPosts.map((post) => {
+          const featured = getFeaturedImage(post);
+          const excerpt = getExcerptText(post);
+
+          return (
+            <article
+              style="
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+              "
+            >
+              {featured && featured.url && (
+                <div class="square-media">
+                  <img
+                    src={featured.url}
+                    alt={featured.alt || ''}
+                  />
+                </div>
+              )}
+
+              <div style="padding: 12px 14px 16px 14px;">
+                <a
+                  href={'/episode/' + post.slug}
+                  style="text-decoration: none; color: inherit;"
+                >
+                  <h3
+                    set:html={post.title.rendered}
+                    style="font-size: 18px; margin: 0 0 6px 0;"
+                  />
+                </a>
+
+                <p style="color: #294596; font-size: 13px; margin: 0 0 8px 0;">
+                  Publié le {new Date(post.date).toLocaleDateString('fr-FR')}
+                </p>
+
+                <p
+                  style="
+                    color: #294596;
+                    font-size: 13px;
+                    margin: 0 0 10px 0;
+                    line-height: 1.6;
+                  "
+                >
+                  {excerpt}
+                </p>
+
+                <a
+                  href={'/episode/' + post.slug}
+                  style="font-size: 13px; color: #294596; text-decoration: none; font-weight: 500;"
+                >
+                  Voir l’épisode →
+                </a>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    )}
+  </section>
+</Layout>

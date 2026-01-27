@@ -1,0 +1,123 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const pageTitle = 'Merci pour votre message – Sur le Banc Vernon';
+const pageDescription =
+  'Merci pour votre message. Sur le Banc Vernon vous répond dès que possible.';
+---
+
+<style>
+  .merci-wrapper {
+    display: flex;
+    justify-content: center;
+  }
+
+  .merci-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 28px 24px 24px 24px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+    max-width: 560px;
+    width: 100%;
+    text-align: left;
+  }
+
+  .merci-title {
+    font-size: 22px;
+    margin: 0 0 10px 0;
+  }
+
+  .merci-lead {
+    font-size: 15px;
+    line-height: 1.7;
+    margin: 0 0 10px 0;
+  }
+
+  .merci-text {
+    font-size: 14px;
+    line-height: 1.7;
+    margin: 0 0 8px 0;
+  }
+
+  .merci-actions {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .merci-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 18px;
+    border-radius: 999px;
+    background: #E94E1B;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .merci-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 18px;
+    border-radius: 999px;
+    border: 1px solid #294596;
+    color: #294596;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    background: #ffffff;
+  }
+
+  .merci-small {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 12px;
+  }
+</style>
+
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+>
+  <div class="merci-wrapper">
+    <section class="merci-card">
+      <h1 class="merci-title">
+        Merci pour votre message ✉️
+      </h1>
+
+      <p class="merci-lead">
+        Votre message a bien été envoyé à l’équipe de Sur le Banc Vernon.
+      </p>
+
+      <p class="merci-text">
+        On le lit dès que possible, et si votre demande nécessite une réponse,
+        on reviendra vers vous sur l’adresse email que vous avez indiquée.
+      </p>
+
+      <p class="merci-text">
+        En attendant, vous pouvez continuer à explorer les histoires et les actualités
+        de Vernon sur le site.
+      </p>
+
+      <div class="merci-actions">
+        <a href="/" class="merci-btn-primary">
+          Revenir à l’accueil
+        </a>
+
+        <a href="/actualites" class="merci-btn-secondary">
+          Voir les dernières actualités
+        </a>
+      </div>
+
+      <p class="merci-small">
+        Et si ce n’est pas déjà fait, pensez à nous suivre sur Facebook, Instagram, TikTok
+        et YouTube pour ne rien manquer des prochains épisodes.
+      </p>
+    </section>
+  </div>
+</Layout>

@@ -1,0 +1,296 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { WORDPRESS_URL } from '../../config.js';
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+
+// Correspondance catégories WP -> pages de séries
+const CATEGORY_LINKS = {
+  actualite: { label: 'Actualités', href: '/actualites' },
+  'secrets-de-vernon': { label: 'Secrets de Vernon', href: '/secrets-de-vernon' },
+  'au-coin-de-la-rue': { label: 'Au coin de la Rue', href: '/au-coin-de-la-rue' },
+  'on-pousse-la-porte': { label: 'On pousse la porte', href: '/on-pousse-la-porte' },
+  'vernon-talk-show': { label: 'Vernon Talk-Show', href: '/vernon-talk-show' },
+};
+
+/** Transforme une URL YouTube (watch, youtu.be, shorts…) en URL embed */
+function getYoutubeEmbedUrl(url) {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    let id = '';
+
+    if (u.hostname === 'youtu.be') {
+      // https://youtu.be/VIDEOID
+      id = u.pathname.slice(1);
+    } else if (u.hostname.includes('youtube.com')) {
+      if (u.pathname === '/watch') {
+        // https://www.youtube.com/watch?v=VIDEOID
+        id = u.searchParams.get('v') ?? '';
+      } else if (u.pathname.startsWith('/embed/')) {
+        // déjà au bon format
+        id = u.pathname.split('/embed/')[1] ?? '';
+      } else if (u.pathname.startsWith('/shorts/')) {
+        // https://www.youtube.com/shorts/VIDEOID
+        id = u.pathname.split('/shorts/')[1] ?? '';
+      }
+    }
+
+    if (!id) {
+      // On ne sait pas parser → on renvoie l’URL telle quelle
+      return url;
+    }
+
+    return `https://www.youtube.com/embed/${id}`;
+  } catch (e) {
+    return url;
+  }
+}
+
+// Récupération de l'épisode par slug (avec _embed pour les catégories & image)
+const response = await fetch(
+  `${WORDPRESS_URL}/wp-json/wp/v2/posts?slug=${slug}&_embed`
+);
+
+let post = null;
+let seoDescription =
+  'Épisode du média local Sur le Banc – Vernon, vidéos et histoires positives à Vernon.';
+let mainCategoryLink = null;
+
+if (response.ok) {
+  const data = await response.json();
+  post = data[0] ?? null;
+
+  if (post) {
+    // Description SEO à partir de l’extrait
+    if (post.excerpt?.rendered) {
+      const withoutHtml = post.excerpt.rendered.replace(/<[^>]+>/g, '');
+      seoDescription =
+        withoutHtml.slice(0, 160) + (withoutHtml.length > 160 ? '…' : '');
+    }
+
+    // Récupérer la première catégorie reconnue pour le maillage
+    const termGroups = post._embedded?.['wp:term'] ?? [];
+    const cats = termGroups[0] ?? [];
+    const found = cats.find((cat) => CATEGORY_LINKS[cat.slug]);
+
+    if (found) {
+      mainCategoryLink = CATEGORY_LINKS[found.slug];
+    }
+  }
+} else {
+  console.error('Erreur HTTP WordPress :', response.status);
+}
+
+// Image à la une
+function getFeaturedImage(p) {
+  const media = p?._embedded?.['wp:featuredmedia']?.[0];
+  if (!media) return null;
+  return {
+    url: media.source_url,
+    alt: media.alt_text || '',
+  };
+}
+
+const featured = post ? getFeaturedImage(post) : null;
+
+// Image pour les métadonnées (Open Graph / Twitter)
+const seoImage = featured?.url ?? '/social/share-default-surbanc.jpg';
+
+// URL vidéo brute depuis ACF puis transformée en embed
+const videoUrlRaw = post?.acf?.video_url ?? null;
+const videoUrl = videoUrlRaw ? getYoutubeEmbedUrl(videoUrlRaw) : null;
+
+// Contenu HTML principal
+const contentHtml = post?.content?.rendered ?? '';
+---
+
+{!post && (
+  <Layout
+    title="Épisode introuvable | Sur le Banc – Vernon"
+    description="L’épisode que vous recherchez est introuvable sur Sur le Banc – Vernon."
+  >
+    <p>L’épisode demandé est introuvable.</p>
+  </Layout>
+)}
+
+{post && (
+  <Layout
+    title={
+      post
+        ? `${post.title.rendered} | Sur le Banc – Vernon, média local à Vernon`
+        : 'Épisode – Sur le Banc – Vernon, média local à Vernon'
+    }
+    description={seoDescription}
+    image={seoImage}
+  >
+    <article>
+      {/* Breadcrumb simple */}
+      <p
+        style="
+          font-size: 13px;
+          color: #6b7280;
+          margin: 0 0 8px 0;
+        "
+      >
+        <a href="/" style="color: #294596; text-decoration: none;">Accueil</a>
+        <span> · </span>
+        {mainCategoryLink ? (
+          <a
+            href={mainCategoryLink.href}
+            style="color: #294596; text-decoration: none;"
+          >
+            {mainCategoryLink.label}
+          </a>
+        ) : (
+          <a
+            href="/actualites"
+            style="color: #294596; text-decoration: none;"
+          >
+            Épisodes
+          </a>
+        )}
+      </p>
+
+      {/* Type + Date */}
+      <p
+        style="
+          font-size: 13px;
+          text-transform: uppercase;
+          letter-spacing: 0.12em;
+          color: #9ca3af;
+          margin: 0 0 4px 0;
+        "
+      >
+        Épisode · Publié le {new Date(post.date).toLocaleDateString('fr-FR')}
+      </p>
+
+      {/* Titre */}
+      <h1
+        set:html={post.title.rendered}
+        style="font-size: 26px; margin: 0 0 12px 0;"
+      />
+
+      {/* Extrait s'il existe */}
+      {post.excerpt?.rendered && (
+        <p
+          set:html={post.excerpt.rendered}
+          style="color: #4b5563; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;"
+        />
+      )}
+
+      {/* Bloc vidéo */}
+      <section
+        style="
+          background: #111827;
+          border-radius: 12px;
+          margin: 0 0 24px 0;
+          overflow: hidden;
+        "
+      >
+        <div
+          style="
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+          "
+        >
+          {videoUrl ? (
+            <iframe
+              src={videoUrl}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+              loading="lazy"
+              style="position:absolute; inset:0; width:100%; height:100%; border:0;"
+            />
+          ) : featured ? (
+            <img
+              src={featured.url}
+              alt={featured.alt || ''}
+              style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;"
+            />
+          ) : (
+            <div
+              style="
+                position:absolute;
+                inset:0;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                color:#e5e7eb;
+                font-size:14px;
+                text-align:center;
+                padding:16px;
+              "
+            >
+              Ici, on viendra intégrer le player vidéo (YouTube, Facebook…)
+              de cet épisode quand l’URL sera renseignée dans WordPress.
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Contenu principal WordPress */}
+      <section
+        style="
+          background: white;
+          border-radius: 12px;
+          padding: 20px 22px;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+        "
+      >
+        <div
+          set:html={contentHtml}
+          style="font-size: 15px; line-height: 1.7; color: #294596;"
+        />
+      </section>
+
+      {/* BLOC MAILLAGE INTERNE */}
+      <section
+        style="
+          margin-top: 28px;
+          padding-top: 16px;
+          border-top: 1px solid #e5e7eb;
+          font-size: 14px;
+          color: #294596;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+        "
+      >
+        {mainCategoryLink && (
+          <span>
+            Cet épisode fait partie de la série{' '}
+            <a
+              href={mainCategoryLink.href}
+              style="text-decoration: none; color: #E94E1B; font-weight: 600;"
+            >
+              {mainCategoryLink.label}
+            </a>
+            .
+          </span>
+        )}
+
+        <span>
+          <a
+            href="/actualites"
+            style="text-decoration: none; color: #294596;"
+          >
+            ← Voir toutes les actualités
+          </a>
+        </span>
+
+        <span>
+          <a
+            href="/"
+            style="text-decoration: none; color: #294596;"
+          >
+            Revenir à l’accueil
+          </a>
+        </span>
+      </section>
+    </article>
+  </Layout>
+)}
