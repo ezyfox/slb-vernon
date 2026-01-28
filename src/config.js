@@ -1,7 +1,7 @@
 // src/config.js
 
 // URL publique de ton WordPress
-export const WORDPRESS_URL = 'https://vernon-actualites.fr';
+export const WORDPRESS_URL = 'https://wp.vernon-actualites.fr';
 
 // Palette de la charte Sur le Banc
 export const BRAND_COLORS = {
